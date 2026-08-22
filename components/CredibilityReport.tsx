@@ -7,6 +7,7 @@ import { getSourceCredibility } from '@/lib/sourceDatabase'
 import { useTranslation } from '@/lib/i18n'
 import { ClaimCard } from '@/components/ClaimCard'
 import { CopyButton } from '@/components/CopyButton'
+import { ShareButton } from '@/components/ShareButton'
 
 interface CredibilityReportProps {
   result: AnalysisResult
@@ -113,6 +114,7 @@ export function CredibilityReport({ result, currentUrl, onReset }: CredibilityRe
             <div className="mono" style={{ fontSize: 11, color: 'var(--grey)', letterSpacing: '0.14em' }}>
               #{reportId} · {reportDate}
             </div>
+            <ShareButton result={result} url={currentUrl} />
             <CopyButton result={result} />
           </div>
         </div>

@@ -98,7 +98,11 @@
     "method": "الطريقة · بنيوي × 0.3 + ادعاءات × 0.7 · قابلة للحساب يدويًا",
     "noStructuralFlags": "لا توجد مؤشرات بنيوية — الكاتب والتاريخ والنبرة والطول كلها سليمة.",
     "freeTierUpgrade": "الترقية",
-    "freeTierUpgrading": "جارٍ بدء الدفع…"
+    "freeTierUpgrading": "جارٍ بدء الدفع…",
+    "shareButton": "مشاركة",
+    "shareStarting": "جارٍ إنشاء الرابط…",
+    "shareCopied": "تم نسخ الرابط!",
+    "shareFailed": "تعذّرت المشاركة"
   },
   "error": {
     "title": "خطأ في التحليل",

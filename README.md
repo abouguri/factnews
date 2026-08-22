@@ -179,8 +179,11 @@ app/api/analyze/route.ts           SSE endpoint · CORS · rate limit · scrape 
 app/api/checkout/route.ts          Lemon Squeezy checkout · Supabase user id round-trips via custom_data
 app/api/billing-portal/route.ts    Lemon Squeezy customer-portal link
 app/api/webhooks/lemonsqueezy/     signature-verified subscription sync → profiles.tier
+app/api/share/route.ts             validates + size-caps a result, inserts it as an unlisted public row
+app/report/[id]/                   server-rendered public report page · generateMetadata for OG tags
 app/account/, app/auth/            account settings · sign-in/up · callback · sign-out
 lib/supabase/                      client · server · admin clients · RLS-scoped auth context
+supabase/migrations/               profiles → analyses → shared_reports, run by hand in order
 lib/urlGuard.ts                    SSRF guard on scraped URLs     (blocks private/link-local, re-checks redirects)
 lib/structural.ts                  deterministic signals          (no network)
 lib/groq.ts                        shared LLM client              (retry, fence + JSON recovery)
@@ -236,6 +239,7 @@ The long-lived `chrome.runtime.Port` lives in the service worker on purpose: MV3
 - **The LLM provider is one constant, not a scattered assumption.** When Groq retired `llama-3.3-70b-versatile` from its catalog mid-project, every call site kept working off one swap in `lib/groq.ts` — including the `reasoning_effort` tuning the replacement model needs to keep its chain-of-thought from eating the whole token budget before emitting an answer.
 - **The webhook verifies signature before anything else touches the body.** Lemon Squeezy's `X-Signature` header is checked against the raw request bytes with `timingSafeEqual`, not `===` — a naive comparison leaks how many leading bytes an attacker's guess got right, one request at a time.
 - **An inline style always outranks an external stylesheet rule of equal selector weight, media query or not.** This defeated a focus ring and a responsive layout rule twice in the same audit pass before the fix moved the property in question into CSS itself instead of trying to override it from further down the cascade.
+- **A shared report is a snapshot with no owner, on purpose.** `shared_reports` has no `user_id` and a permissive RLS policy (`insert`/`select` both `using (true)`) instead of the ownership model `analyses` uses — sharing doesn't require an account, so there's no user to scope the row to. `app/api/share/route.ts` is what actually gates it: shape validation and a size cap, not RLS, is the abuse boundary here.
 
 ---
 
@@ -245,9 +249,10 @@ The long-lived `chrome.runtime.Port` lives in the service worker on purpose: MV3
 - **Dark mode** — a full token palette, a toggle in the nav, and a pre-paint script so the theme never flashes
 - **English + Arabic** — message catalogues with a language selector, a persisted choice, and `lang`/`dir` on the document root
 - **History** — server-side and cross-device for signed-in users, `localStorage` otherwise; either way it's version-guarded, so reports written by a previous scoring engine are discarded rather than mis-rendered
+- **Shareable report links** — the Share button on any report (no account needed) snapshots the result into a public, unlisted `/report/[id]` page with its own OG tags for link previews; `noindex`, so it's linkable without becoming search-indexed content
 - **Accounts & billing** — Supabase auth, Postgres profiles behind row-level security, Lemon Squeezy checkout and a signature-verified webhook — see [Accounts & billing](#accounts--billing)
 - **SEO** — OG image, `sitemap.ts`, `robots.ts`, full Open Graph and Twitter metadata
-- **Tests** — 141 Vitest cases across 9 files: the analysis generator (free/paid frames, verdict scoring, missing-key failure), the Groq client (retry on 429 and network error, no retry on 4xx, fence stripping, JSON recovery), structural scoring, verdict normalisation, the SSRF guard, the scraper, history's dual-mode read/write path, the Lemon Squeezy webhook (signature verification, status mapping, missing-user-id handling), and the analyze route end to end (validation, streaming, rate-limit buckets, quota refunds)
+- **Tests** — 150 Vitest cases across 10 files: the analysis generator (free/paid frames, verdict scoring, missing-key failure), the Groq client (retry on 429 and network error, no retry on 4xx, fence stripping, JSON recovery), structural scoring, verdict normalisation, the SSRF guard, the scraper, history's dual-mode read/write path, the Lemon Squeezy webhook (signature verification, status mapping, missing-user-id handling), the share route (shape validation, size cap, degraded-Supabase handling), and the analyze route end to end (validation, streaming, rate-limit buckets, quota refunds)
 
 ---
 
@@ -270,6 +275,8 @@ npm run check                        # typecheck + lint + test
 | `NEXT_PUBLIC_SUPABASE_URL` / `_ANON_KEY` | accounts, server-side history | signed-out everywhere; `resolveTier()` returns `paid` for all traffic |
 | `SUPABASE_SERVICE_ROLE_KEY` | webhook writes to `profiles` (bypasses RLS — server-only, never `NEXT_PUBLIC_`) | webhook can't update subscription status |
 | `LEMONSQUEEZY_API_KEY` / `_STORE_ID` / `_VARIANT_ID` / `_WEBHOOK_SECRET` | checkout + subscription sync | `/api/checkout` returns `503` |
+
+If you're pointing at your own Supabase project, run the SQL files in [`supabase/migrations/`](supabase/migrations/) in order, by hand, in the Supabase SQL editor — `profiles` and its signup trigger, then `analyses`, then `shared_reports`. Skipping one only breaks the corresponding feature (accounts, history, or the Share button, respectively, each failing with its own contained error) rather than the app around it.
 
 ### Extension
 
@@ -295,7 +302,7 @@ This is a working prototype, not a finished product. Where it falls short:
 
 ## Roadmap
 
-`Shareable report URLs` · `OAuth providers + self-service account deletion` · `Calibration against a labelled set` · `Firefox / Safari builds` · `Error tracking` · `Public API`
+`OAuth providers + self-service account deletion` · `Calibration against a labelled set` · `Landing page rebrand` · `Firefox / Safari builds` · `Error tracking` · `Public API`
 
 ---
 

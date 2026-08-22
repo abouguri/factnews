@@ -98,7 +98,11 @@
     "method": "method · structural × 0.3 + claims × 0.7 · reproducible by hand",
     "noStructuralFlags": "No structural flags — byline, date, tone and length all checked out clean.",
     "freeTierUpgrade": "Upgrade",
-    "freeTierUpgrading": "Starting checkout…"
+    "freeTierUpgrading": "Starting checkout…",
+    "shareButton": "Share",
+    "shareStarting": "Creating link…",
+    "shareCopied": "Link copied!",
+    "shareFailed": "Could not share"
   },
   "error": {
     "title": "Analysis error",

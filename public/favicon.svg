@@ -1,8 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  
-  <rect width="64" height="64" rx="14" fill="#0F2942"></rect>
-  
-  <circle cx="32" cy="30" r="13" stroke="#F5F2EA" stroke-width="2.5" fill="none"></circle>
-  
-  <circle cx="44" cy="42" r="3.2" fill="#E8A33D"></circle>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320" fill="none">
+  <defs>
+    <filter id="fluff" x="-30%" y="-30%" width="160%" height="160%">
+      <feTurbulence type="fractalNoise" baseFrequency=".04" numOctaves="3" seed="8" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="4"/>
+    </filter>
+  </defs>
+  <rect width="320" height="320" rx="70" fill="#034F46"/>
+  <g filter="url(#fluff)" stroke="#FFFFEB" stroke-width="50">
+    <circle cx="145" cy="142" r="92"/>
+    <path d="M176 177C196 198 218 223 250 248" stroke-linecap="round"/>
+  </g>
 </svg>
